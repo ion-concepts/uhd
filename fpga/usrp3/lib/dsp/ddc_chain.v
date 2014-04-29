@@ -164,18 +164,23 @@ module ddc_chain
      (.clk(clk),.reset(rst), .in(prod_reg_q),.strobe_in(strobe_mult), .out(round_q), .strobe_out());
 
    // Custom power integration function
-   power_integrate power_integrate_i
-     (
-      .clk(clk),
-      .reset(rst),
-      .run(run),
-      .i_in(round_i),
-      .q_in(round_q),
-      .strobe_in(strobe_round),
-      .power_out(sample),
-      .strobe_out(strobe),
-      .debug()
-      );
+   power_integrate 
+     #(.BASE(BASE+4))
+       power_integrate_i
+	 (
+	  .clk(clk),
+	  .reset(rst),
+	  .run(run),
+	  .set_stb(set_stb),
+	  .set_addr(set_addr),
+	  .set_data(set_data),
+	  .i_in(round_i),
+	  .q_in(round_q),
+	  .strobe_in(strobe_round),
+	  .power_out(sample),
+	  .strobe_out(strobe),
+	  .debug()
+	  );
    
 
    assign debug = {enable_hb1, enable_hb2, run, strobe, strobe_cic, strobe_hb1, strobe_hb2};
