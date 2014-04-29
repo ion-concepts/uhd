@@ -16,6 +16,7 @@
 //
 
 module power_integrate
+  #(parameter BASE = 0)
     (
      input clk,
      input reset,
@@ -24,7 +25,7 @@ module power_integrate
      //
      // Settings bus
      //
-     input set_stb input [7:0] set_addr, input [31:0] set_data,
+     input set_stb, input [7:0] set_addr, input [31:0] set_data,
      //
      // Input bus - Complex sample stream to integrate
      //
@@ -32,7 +33,7 @@ module power_integrate
      //
      // Output CHDR bus - 32bit unsigned ints of integrated power.
      //
-     output [31:0] power_out, output reg strobe_out,
+     output reg [31:0] power_out, output reg strobe_out,
      //
      output [63:0] debug
      );
@@ -41,7 +42,7 @@ module power_integrate
    // Normally programed with LOG2 of the number of integrated samples.
    wire [3:0] 	   scale;
    
-   setting_reg #(.my_addr(SR_SCALE), .awidth(8), .width(4)) sr_scale
+   setting_reg #(.my_addr(BASE+0), .awidth(8), .width(4)) sr_scale
      (.clk(clk), .rst(reset), .strobe(set_stb), .addr(set_addr), .in(set_data),
       .out(scale), .changed());
 
@@ -49,7 +50,7 @@ module power_integrate
    // and there are normally 2 complex samples per 64bit CHDR payload line.
    wire [15:0] 	   integrate;
 
-   setting_reg #(.my_addr(SR_INTEGRATE), .awidth(8), .width(16)) sr_scale
+   setting_reg #(.my_addr(BASE+1), .awidth(8), .width(16)) sr_integrate
      (.clk(clk), .rst(reset), .strobe(set_stb), .addr(set_addr), .in(set_data),
       .out(integrate), .changed());
 
@@ -57,7 +58,7 @@ module power_integrate
    //
    wire 	   enable;
 
-   setting_reg #(.my_addr(SR_POWER_ENABLE), .awidth(8), .width(1)) sr_power_enable
+   setting_reg #(.my_addr(BASE+2), .awidth(8), .width(1)) sr_power_enable
      (.clk(clk), .rst(reset), .strobe(set_stb), .addr(set_addr), .in(set_data),
       .out(enable), .changed());
 
@@ -132,7 +133,7 @@ module power_integrate
 	 // New integration starts, don't add in previous accumulator.
 	 begin
 	    acc <= sum_of_squares;
-	    count <= 16'1;
+	    count <= 16'h1;
 	    pipe5_en <= 1'b0;
 	    clear_acc <= 1'b0;
 	 end

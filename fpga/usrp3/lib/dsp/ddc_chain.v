@@ -157,10 +157,10 @@ module ddc_chain
    wire        strobe_round;
    
    
-   round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_i
+   round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_i_i0
      (.clk(clk),.reset(rst), .in(prod_reg_i),.strobe_in(strobe_mult), .out(round_i), .strobe_out(strobe_round));
 
-   round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_q
+   round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_q_i0
      (.clk(clk),.reset(rst), .in(prod_reg_q),.strobe_in(strobe_mult), .out(round_q), .strobe_out());
 
    // Custom power integration function
