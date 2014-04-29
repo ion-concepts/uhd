@@ -37,4 +37,5 @@ acc.v \
 rx_frontend.v \
 tx_frontend.v \
 rx_dcoffset.v \
+power_integrate.v \
 ))

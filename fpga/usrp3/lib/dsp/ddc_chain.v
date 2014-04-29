@@ -153,11 +153,30 @@ module ddc_chain
    end
 
    // Round final answer to 16 bits
+   wire [15:0] round_i, round_q;
+   wire        strobe_round;
+   
+   
    round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_i
-     (.clk(clk),.reset(rst), .in(prod_reg_i),.strobe_in(strobe_mult), .out(sample[31:16]), .strobe_out(strobe));
+     (.clk(clk),.reset(rst), .in(prod_reg_i),.strobe_in(strobe_mult), .out(round_i), .strobe_out(strobe_round));
 
    round_sd #(.WIDTH_IN(WIDTH),.WIDTH_OUT(16)) round_q
-     (.clk(clk),.reset(rst), .in(prod_reg_q),.strobe_in(strobe_mult), .out(sample[15:0]), .strobe_out());
+     (.clk(clk),.reset(rst), .in(prod_reg_q),.strobe_in(strobe_mult), .out(round_q), .strobe_out());
+
+   // Custom power integration function
+   power_integrate power_integrate_i
+     (
+      .clk(clk),
+      .reset(rst),
+      .run(run),
+      .i_in(round_i),
+      .q_in(round_q),
+      .strobe_in(strobe_round),
+      .power_out(sample),
+      .strobe_out(strobe),
+      .debug()
+      );
+   
 
    assign debug = {enable_hb1, enable_hb2, run, strobe, strobe_cic, strobe_hb1, strobe_hb2};
    
