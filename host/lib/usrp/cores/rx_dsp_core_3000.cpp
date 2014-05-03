@@ -194,7 +194,7 @@ public:
         }
 
 	// Setup power integration
-	set_power_integration(2);
+	set_power_integration(64);
 
         // Calculate CIC decimation (i.e., without halfband decimators)
         // Calculate closest multiplier constant to reverse gain absent scale multipliers
