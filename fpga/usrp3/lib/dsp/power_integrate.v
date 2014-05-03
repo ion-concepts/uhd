@@ -122,14 +122,21 @@ module power_integrate
    
    always @(posedge clk)
      if (~run)
-       // Reset accumulator if we are just tstarting from idle
+       // Reset accumulator if we are just starting from idle
        begin
 	  acc <= 48'h0;
 	  count <= 0;
 	  pipe5_en <= 1'b0;
        end
      else if (pipe4_en)
-       if (clear_acc)
+       if (integrate == 16'd1)
+	 // Sepcial case!
+	 begin
+	    acc <= sum_of_squares;
+	    count <= 16'h1;
+	    pipe5_en <= 1'b1;
+	 end
+       else if (clear_acc)
 	 // New integration starts, don't add in previous accumulator.
 	 begin
 	    acc <= sum_of_squares;
@@ -167,7 +174,7 @@ module power_integrate
        // The maximum left shift here of 16bits sets the maximum number of integrations as
        // 2^15 (2^16 actual complex samples)
        begin
-	  power_out[31:0] <= acc[47:0] >> (scale+1);
+	  power_out[31:0] <= acc[47:0] >> (scale);
 	  strobe_out <= 1'b1;
        end
      else

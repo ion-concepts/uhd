@@ -35,6 +35,10 @@
 #define REG_DSP_RX_COEFFS     _dsp_base + 16
 //FIXME: Add code to support REG_DSP_RX_COEFFS
 
+#define REG_DSP_RX_POWER_SCALE _dsp_base + 16
+#define REG_DSP_RX_INTERVAL _dsp_base + 20
+#define REG_DSP_RX_POWER_ENABLE _dsp_base + 24
+
 #define FLAG_DSP_RX_MUX_SWAP_IQ   (1 << 0)
 #define FLAG_DSP_RX_MUX_REAL_MODE (1 << 1)
 
@@ -108,6 +112,34 @@ public:
         return range;
     }
 
+  // The power integration block has 3 settings registers:
+  // SR_POWER_SCALE (SR_RX_DSP+4) [3:0] - Scale factor to normalize power, set to log2(interval)
+  // SR_INTERVAL (SR_RX_DSP+5) [15:0] - Interval to accumulate over (Sample count)
+  // SR_POWER_ENABLE (SR_RX_DSP+6) [0] - Enable power integrator. Default is off.
+  //
+  // Passing an interval of 0 to this method will cause the intergation block to remian dissabled.
+  //
+  void set_power_integration(const int interval){
+    int sample_count = interval;
+    if (interval == 0)
+      // Power integration disabled
+      {
+	_iface->poke32(REG_DSP_RX_POWER_ENABLE,0);
+      }
+    else
+      {
+	_iface->poke32(REG_DSP_RX_POWER_ENABLE,1);
+	_iface->poke32(REG_DSP_RX_INTERVAL,interval);
+	int log2interval = 0;
+	while (sample_count >>= 1) ++log2interval;
+	 UHD_MSG(status) << boost::format(
+					  "Power Interval: %d, scale: %d\n"
+					  ) % interval % log2interval;
+	_iface->poke32(REG_DSP_RX_POWER_SCALE,log2interval);
+      }
+
+  }
+
     double set_host_rate(const double rate){
         const size_t decim_rate = boost::math::iround(_tick_rate/this->get_host_rates().clip(rate, true));
         size_t decim = decim_rate;
@@ -160,6 +192,9 @@ public:
                 ) % decim_rate % (_tick_rate/1e6) % (rate/1e6);
             }
         }
+
+	// Setup power integration
+	set_power_integration(2);
 
         // Calculate CIC decimation (i.e., without halfband decimators)
         // Calculate closest multiplier constant to reverse gain absent scale multipliers

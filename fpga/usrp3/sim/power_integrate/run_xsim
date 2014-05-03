@@ -1,0 +1,40 @@
+#!/bin/bash
+
+while [[ $# > 0 ]]
+do
+    key="$1"
+    shift
+
+    case $key in
+	-g|--gui)
+	    GUI="-gui"
+	    ;;
+	-s|--script)
+	    TCL="-tclbatch"
+	    SCRIPT="$1"
+	    shift
+	    ;;
+	-a|--ascii)
+	    ASCIISIM="-d ASCII_DEBUG"
+	    ;;	
+	*)
+            # unknown option
+	    ;;
+    esac
+done
+
+
+rm -r xsim.dir
+
+xvlog $ASCIISIM -work work --sourcelibext .v \
+    /opt/Xilinx/Vivado/2013.4/data/verilog/src/glbl.v \
+    --sourcelibdir ../../../lib/dsp \
+    --sourcelibdir ../../../lib/control \
+    ../../../lib/dsp/power_integrate_tb.v
+
+
+
+xelab work.power_integrate_tb  work.glbl $ASCIISIM -s power_integrate_tb -L unisims_ver  -L secureip --debug all 
+
+
+xsim  power_integrate_tb  $GUI $TCL $SCRIPT

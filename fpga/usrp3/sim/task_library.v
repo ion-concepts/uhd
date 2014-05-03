@@ -34,23 +34,30 @@ reg clear;
  -----/\----- EXCLUDED -----/\----- */
 
 
-/* -----\/----- EXCLUDED -----\/-----
+
 reg set_stb;
 reg [7:0] set_addr;
 reg [31:0] set_data;
- -----/\----- EXCLUDED -----/\----- */
-/* -----\/----- EXCLUDED -----\/-----
+
+
 
 `ifndef CHDR_IN_NUMBER
  `define CHDR_IN_NUMBER 1
 `endif
 
-
 reg [63:0] data_in[`CHDR_IN_NUMBER-1:0];
 reg last_in[`CHDR_IN_NUMBER-1:0];
 reg valid_in[`CHDR_IN_NUMBER-1:0];
 wire ready_in[`CHDR_IN_NUMBER-1:0];
- -----/\----- EXCLUDED -----/\----- */
+
+`ifndef CHDR_OUT_NUMBER
+ `define CHDR_OUT_NUMBER 1
+`endif
+
+wire [63:0] data_out[`CHDR_OUT_NUMBER-1:0];
+wire last_out[`CHDR_OUT_NUMBER-1:0];
+wire valid_out[`CHDR_OUT_NUMBER-1:0];
+reg ready_out[`CHDR_OUT_NUMBER-1:0];
 
 
 ///////////////////////////////////////////////////////////////////
