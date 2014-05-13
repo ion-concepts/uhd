@@ -59,6 +59,7 @@ public:
     {
         // previously uninitialized - assuming zero for all
         _link_rate = _host_extra_scaling = _fxpt_scalar_correction = 0.0;
+        _dsp_integration = 0;
 
         //init to something so update method has reasonable defaults
         _scaling_adjustment = 1.0;
@@ -194,7 +195,7 @@ public:
         }
 
 	// Setup power integration
-	set_power_integration(64);
+	set_power_integration(_dsp_integration);
 
         // Calculate CIC decimation (i.e., without halfband decimators)
         // Calculate closest multiplier constant to reverse gain absent scale multipliers
@@ -242,6 +243,8 @@ public:
 
     void setup(const uhd::stream_args_t &stream_args){
 
+        _dsp_integration = stream_args.args.cast<int>("integration", 0);
+
         if (stream_args.otw_format == "sc16"){
             _dsp_extra_scaling = 1.0;
             _host_extra_scaling = 1.0;
@@ -275,6 +278,7 @@ private:
     const bool _is_b200;    //TODO: Obsolete this when we switch to the new DDC on the B200
     double _tick_rate, _link_rate;
     double _scaling_adjustment, _dsp_extra_scaling, _host_extra_scaling, _fxpt_scalar_correction;
+    int _dsp_integration;
 };
 
 rx_dsp_core_3000::sptr rx_dsp_core_3000::make(wb_iface::sptr iface, const size_t dsp_base, const bool is_b200 /* = false */)
