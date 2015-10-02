@@ -19,6 +19,8 @@
 #include <uhd/utils/msg.hpp>
 #include <boost/foreach.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
 
 using namespace uhd;
 using namespace uhd::usrp;
@@ -80,6 +82,16 @@ class ad936x_manager_impl : public ad936x_manager
         }
     }
 
+  //
+  // loopback_self_test checks the integrity of the FPGA->AD936x->FPGA sample interface.
+  // It is a reasonably effective test for AC timing since I/Q Ch0/Ch1 alternate over the same wires,
+  // note however that it sues whatever timing is configured at the time the test is called rather
+  // than select worst case conditions to stress the interface.
+  // A test value is written to the codec_idle register in the TX side of teh radio and this value propogates to AD9361
+  // which in turn is configured in a special loopback mode that sends received sample values straight back to the baseband 
+  // unmodified. The RX side of the radio allows both the received value (as well as the TX value) to be read by the host 
+  // via the readback interface.
+  //
     void loopback_self_test(
             wb_iface::sptr iface,
             wb_iface::wb_addr_type codec_idle_addr,
@@ -94,15 +106,25 @@ class ad936x_manager_impl : public ad936x_manager
             boost::hash_combine(hash, i);
             const boost::uint32_t word32 = boost::uint32_t(hash) & 0xfff0fff0;
             iface->poke32(codec_idle_addr, word32);
-            // We do 2 peeks so we have enough idleness for loopback to propagate
-            iface->peek64(codec_readback_addr);
+	    iface->peek64(codec_readback_addr);
             const boost::uint64_t rb_word64 = iface->peek64(codec_readback_addr);
             const boost::uint32_t rb_tx = boost::uint32_t(rb_word64 >> 32);
             const boost::uint32_t rb_rx = boost::uint32_t(rb_word64 & 0xffffffff);
-            bool test_fail = word32 != rb_tx or word32 != rb_rx;
-            if (test_fail) {
-                UHD_MSG(status) << "fail" << std::endl;
-                throw uhd::runtime_error("CODEC loopback test failed.");
+	    bool test_fail = word32 != rb_tx or word32 != rb_rx;
+	    boost::posix_time::ptime start_time = boost::posix_time::microsec_clock::local_time();
+	    boost::posix_time::time_duration elapsed;
+	    while(test_fail == 1) {
+	      boost::this_thread::sleep(boost::posix_time::microseconds(100));
+	      elapsed = boost::posix_time::microsec_clock::local_time() - start_time;
+	      if(elapsed.total_milliseconds() > (1000)) // 1 second timeout.
+		{
+		  UHD_MSG(status) << "fail" << std::endl;
+		  throw uhd::runtime_error("CODEC loopback test failed.");
+		}
+	      const boost::uint64_t rb_word64 = iface->peek64(codec_readback_addr);
+	      const boost::uint32_t rb_tx = boost::uint32_t(rb_word64 >> 32);
+	      const boost::uint32_t rb_rx = boost::uint32_t(rb_word64 & 0xffffffff);
+	      test_fail = word32 != rb_tx or word32 != rb_rx;
             }
         }
         UHD_MSG(status) << "pass" << std::endl;
@@ -110,6 +132,8 @@ class ad936x_manager_impl : public ad936x_manager
         iface->poke32(codec_idle_addr, 0);
         _codec_ctrl->data_port_loopback(false);
     }
+
+
 
 
     double get_auto_tick_rate(
