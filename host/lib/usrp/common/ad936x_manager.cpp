@@ -85,9 +85,9 @@ class ad936x_manager_impl : public ad936x_manager
   //
   // loopback_self_test checks the integrity of the FPGA->AD936x->FPGA sample interface.
   // It is a reasonably effective test for AC timing since I/Q Ch0/Ch1 alternate over the same wires,
-  // note however that it sues whatever timing is configured at the time the test is called rather
+  // note however that it uses whatever timing is configured at the time the test is called rather
   // than select worst case conditions to stress the interface.
-  // A test value is written to the codec_idle register in the TX side of teh radio and this value propogates to AD9361
+  // A test value is written to the codec_idle register in the TX side of the radio and this value propogates to AD9361
   // which in turn is configured in a special loopback mode that sends received sample values straight back to the baseband 
   // unmodified. The RX side of the radio allows both the received value (as well as the TX value) to be read by the host 
   // via the readback interface.
